@@ -33,19 +33,17 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args:
-            - -port
-            - "{{ .Values.service.port }}"
+          env:
+            - name: PORT
+              value: "{{ .Values.service.port }}"
           ports:
             - name: http
-              containerPort: 5678
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
-            exec:
-              command:
-                - /bin/bash
-                - -c
-                - "wget --spider -q http://localhost:{{ .Values.service.port }}"
+            httpGet:
+              path: /
+              port: http
           readinessProbe:
             httpGet:
               path: /
