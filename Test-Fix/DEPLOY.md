@@ -182,6 +182,8 @@ minikube ssh 'curl -k -s -H "Host: http-echo.k8s-server.local" https://localhost
 
    # HTTPS Test (self-signed cert)
    curl -k -i https://http-echo.k8s-server.local/
+   
+   curl -vk https://http-echo.k8s-server.local/
    ```
 
 ---
