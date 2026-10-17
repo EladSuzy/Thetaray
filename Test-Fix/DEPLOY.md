@@ -33,10 +33,28 @@ minikube ip
 
 ## 2. TLS (HTTPS) Certificate Generation
 
-Create a self-signed TLS certificate for the domain `http-echo.k8s-server.local`:
+> [!NOTE]
+> **Production Implementation vs. Local Development:**
+> The `openssl` commands below generate a self-signed certificate suitable **only for local development and testing** on Minikube.
+>
+> In a **production environment**, manual self-signed certificates should never be used. Instead, production TLS is implemented using one of the following architectures:
+>
+> 1. **Automated K8s-Native PKI (`cert-manager` + Let's Encrypt / ACME):**
+>    - Install `cert-manager` in the cluster to automate certificate lifecycle management.
+>    - Create an ACME `ClusterIssuer` (using HTTP-01 or DNS-01 challenge solvers).
+>    - Add the annotation `cert-manager.io/cluster-issuer: "letsencrypt-prod"` (or `kubernetes.io/tls-acme: "true"`) to the Ingress resource in `values.yaml`.
+>    - `cert-manager` automatically requests, issues, validates, and rotates the certificates every 60–90 days without downtime or manual intervention.
+>
+> 2. **Cloud Load Balancer SSL Offloading (AWS ACM / GCP Managed SSL / Azure App Gateway):**
+>    - Terminate TLS directly at the cloud external Load Balancer (e.g., AWS ALB via AWS Load Balancer Controller).
+>    - Attach the cloud-managed certificate ARN via Ingress annotations (`alb.ingress.kubernetes.io/certificate-arn: <arn>`).
+>    - The cloud provider manages automated renewals with 100% SLA and offloads cryptographic computation from cluster nodes.
+>
+> 3. **Enterprise Internal PKI (HashiCorp Vault / Private CA):**
+>    - For internal microservices and private VPCs, `cert-manager` is configured with a `Vault` or `CA` issuer backed by the enterprise corporate root CA.
 
 ```bash
-# 1. Generate RSA private key and self-signed certificate
+# 1. Generate RSA private key and self-signed certificate (Dev/Minikube only)
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout /tmp/tls.key \
   -out /tmp/tls.crt \
